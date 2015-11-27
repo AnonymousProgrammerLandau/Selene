@@ -5,7 +5,6 @@
 #include "ExceptionHandler.h"
 #include <functional>
 #include "primitives.h"
-#include <tuple>
 #include "util.h"
 
 namespace sel {
@@ -50,29 +49,77 @@ inline int _lua_dispatcher(lua_State *l) {
     return lua_error(l);
 }
 
-template <typename Ret, typename... Args, std::size_t... N>
-inline Ret _lift(std::function<Ret(Args...)> fun,
-                 std::tuple<Args...> args,
-                 _indices<N...>) {
-    return fun(std::get<N>(args)...);
-}
+struct PushResults{};
+struct DontPushResults{};
 
-template <typename Ret, typename... Args>
-inline Ret _lift(std::function<Ret(Args...)> fun,
-                 std::tuple<Args...> args) {
-    return _lift(fun, args, typename _indices_builder<sizeof...(Args)>::type());
-}
+template<
+    typename Indices,
+    typename... Args
+>
+struct _get_args;
 
+template<
+    std::size_t... idx,
+    typename... Args
+>
+class _get_args<_indices<idx...>, Args...> {
+    lua_State *_l;
 
-template <typename... T, std::size_t... N>
-inline std::tuple<T...> _get_args(lua_State *state, _indices<N...>) {
-    return std::tuple<T...>{_check_get(_id<T>{}, state, N + 1)...};
-}
+    template<typename Callable, typename... ExplicitParams>
+    void _call(DontPushResults, Callable&& callable, ExplicitParams&&... explicitParams) {
+        callable(
+            std::forward<ExplicitParams>(explicitParams)...,
+            _check_get(_id<Args>{}, _l, idx + 1)...);
+    }
 
-template <typename... T>
-inline std::tuple<T...> _get_args(lua_State *state) {
-    constexpr std::size_t num_args = sizeof...(T);
-    return _get_args<T...>(state, typename _indices_builder<num_args>::type());
+    template<typename Callable, typename... ExplicitParams>
+    void _call(PushResults, Callable&& callable, ExplicitParams&&... explicitParams) {
+        _push(_l, callable(
+            std::forward<ExplicitParams>(explicitParams)...,
+            _check_get(_id<Args>{}, _l, idx + 1)...));
+    }
+
+public:
+    _get_args(lua_State *l) : _l(l) {}
+
+    template<typename Callable, typename... ExplicitParams>
+    void Call(Callable&& callable, ExplicitParams&&... explicitParams) {
+        constexpr bool has_results =
+            !std::is_void<
+                decltype(callable(
+                    std::forward<ExplicitParams>(explicitParams)...,
+                    _check_get(_id<Args>{}, _l, idx + 1)...))
+            >::value;
+
+        _call(
+            typename std::conditional<
+                has_results,
+                PushResults,
+                DontPushResults
+            >::type{},
+            std::forward<Callable>(callable),
+            std::forward<ExplicitParams>(explicitParams)...
+        );
+    }
+
+};
+
+template<
+    typename... Args,
+    typename Callable,
+    typename... ExplicitParams
+>
+void _call(
+    lua_State *l,
+    Callable &&callable,
+    ExplicitParams&&... explicitParams
+) {
+    using arg_indices = typename _indices_builder<sizeof...(Args)>::type;
+    _get_args<arg_indices, decay_primitive<Args>...>{l}
+    .Call(
+        std::forward<Callable>(callable),
+        std::forward<ExplicitParams>(explicitParams)...
+    );
 }
 }
 }

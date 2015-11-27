@@ -24,9 +24,7 @@ public:
     }
 
     int Apply(lua_State *l) {
-        std::tuple<Args...> args = detail::_get_args<Args...>(l);
-        auto pack = std::tuple_cat(std::make_tuple(l), args);
-        detail::_lift(_ctor, pack);
+        detail::_call<Args...>(l, _ctor, l);
         // The constructor will leave a single userdata entry on the stack
         return 1;
     }

@@ -6,7 +6,6 @@
 #include <string>
 #include "Registry.h"
 #include "Selector.h"
-#include <tuple>
 #include "util.h"
 #include <vector>
 

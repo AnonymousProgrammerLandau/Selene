@@ -54,7 +54,7 @@ private:
             return t->*member;
         };
         _funs.emplace_back(
-            sel::make_unique<ClassFun<1, T, M>>(
+            sel::make_unique<ClassFun<T, M>>(
                 state, std::string{member_name},
                 _metatable_name.c_str(), lambda_get));
 
@@ -62,7 +62,7 @@ private:
             (t->*member) = value;
         };
         _funs.emplace_back(
-            sel::make_unique<ClassFun<0, T, void, M>>(
+            sel::make_unique<ClassFun<T, void, M>>(
                 state, std::string("set_") + member_name,
                 _metatable_name.c_str(), lambda_set));
     }
@@ -76,7 +76,7 @@ private:
             return t->*member;
         };
         _funs.emplace_back(
-            sel::make_unique<ClassFun<1, T, M>>(
+            sel::make_unique<ClassFun<T, M>>(
                 state, std::string{member_name},
                 _metatable_name.c_str(), lambda_get));
     }
@@ -88,9 +88,8 @@ private:
         std::function<Ret(T*, Args&&...)> lambda = [fun](T *t, Args&&... args) -> Ret {
             return (t->*fun)(std::forward<Args>(args)...);
         };
-        constexpr int arity = detail::_arity<Ret>::value;
         _funs.emplace_back(
-            sel::make_unique<ClassFun<arity, T, Ret, Args...>>(
+            sel::make_unique<ClassFun<T, Ret, Args...>>(
                 state, std::string(fun_name),
                 _metatable_name.c_str(), lambda));
     }
@@ -102,9 +101,8 @@ private:
         std::function<Ret(T*, Args...)> lambda = [fun](T *t, Args... args) {
             return (t->*fun)(args...);
         };
-        constexpr int arity = detail::_arity<Ret>::value;
         _funs.emplace_back(
-            sel::make_unique<ClassFun<arity, T, Ret, Args...>>(
+            sel::make_unique<ClassFun<T, Ret, Args...>>(
                 state, std::string(fun_name),
                 _metatable_name.c_str(), lambda));
     }
@@ -117,9 +115,8 @@ private:
             [fun](const T *t, Args... args) {
                 return (t->*fun)(args...);
             };
-        constexpr int arity = detail::_arity<Ret>::value;
         _funs.emplace_back(
-            sel::make_unique<ClassFun<arity, const T, Ret, Args...>>(
+            sel::make_unique<ClassFun<const T, Ret, Args...>>(
                 state, std::string(fun_name),
                 _metatable_name.c_str(), lambda));
     }

@@ -7,3 +7,7 @@ function access_member()
    instance = get_instance()
    return instance:qux()
 end
+
+function return_both_instances()
+   return get_instance(), get_instance2()
+end

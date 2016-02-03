@@ -70,6 +70,7 @@ static TestMap tests = {
     {"test_metatable_registry_ref", test_metatable_registry_ref},
     {"test_metatable_ptr_member", test_metatable_ptr_member},
     {"test_metatable_ref_member", test_metatable_ptr_member},
+    {"test_objects_keep_their_type", test_objects_keep_their_type},
 
     {"test_register_obj", test_register_obj},
     {"test_register_obj_member_variable", test_register_obj_member_variable},

@@ -288,6 +288,7 @@ inline void _push(lua_State *l, T* t) {
   }
   else {
     lua_pushlightuserdata(l, t);
+    // FIXME There is only one global Metatable for lightuserdata.
     MetatableRegistry::SetMetatable(l, typeid(T));
   }
 }
@@ -298,6 +299,7 @@ inline typename std::enable_if<
 >::type
 _push(lua_State *l, T& t) {
     lua_pushlightuserdata(l, &t);
+    // FIXME There is only one global Metatable for lightuserdata.
     MetatableRegistry::SetMetatable(l, typeid(T));
 }
 

@@ -49,12 +49,18 @@ static Quxx quxx;
 
 Quxx *GetQuxxPtr() { return &quxx; }
 
-bool test_objects_keep_their_type(sel::State &state) {
+bool test_types_stay_the_same(sel::State &state) {
     state["get_instance"] = &GetQuxPtr;
     state["get_instance2"] = &GetQuxxPtr;
     state["Qux"].SetClass<Qux>("baz", &Qux::baz);
     state["Quxx"].SetClass<Quxx>("baz", &Quxx::baz);
     state.Load("../test/test_metatable.lua");
-    auto instances = state["return_both_instances"]().GetTuple<Qux*, Quxx*>();
-    return std::get<0>(instances) != nullptr && std::get<1>(instances) != nullptr;
+    return state["types_stay_the_same"]();
+}
+
+bool test_types_stay_the_same2(sel::State &state) {
+    state["Qux"].SetClass<Qux>("baz", &Qux::baz);
+    state["Quxx"].SetClass<Quxx>("baz", &Quxx::baz);
+    state.Load("../test/test_metatable.lua");
+    return state["have_different_metatables"](qux, quxx);
 }

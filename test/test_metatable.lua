@@ -8,6 +8,13 @@ function access_member()
    return instance:qux()
 end
 
-function return_both_instances()
-   return get_instance(), get_instance2()
+function types_stay_the_same()
+   instance = get_instance()
+   type_of_instance = getmetatable(instance)
+   get_instance2()
+   return rawequal(type_of_instance, getmetatable(instance))
+end
+
+function have_different_metatables(a, b)
+   return not rawequal(getmetatable(a), getmetatable(b))
 end

@@ -281,6 +281,14 @@ T _pop(_id<T> t, lua_State *l) {
 
 inline void _push(lua_State *) {}
 
+template<typename>
+struct type_dependant_false{
+    static bool const value;
+};
+
+template<typename T>
+bool const sel::detail::type_dependant_false<T>::value = false;
+
 template <typename T>
 inline void _push(lua_State *l, T* t) {
   if(t == nullptr) {
@@ -288,6 +296,7 @@ inline void _push(lua_State *l, T* t) {
   }
   else {
     lua_pushlightuserdata(l, t);
+    static_assert(type_dependant_false<T>::value, "Currently lightuserdata is not supported. See issue 140.");
     MetatableRegistry::SetMetatable(l, typeid(T));
   }
 }
@@ -298,6 +307,7 @@ inline typename std::enable_if<
 >::type
 _push(lua_State *l, T& t) {
     lua_pushlightuserdata(l, &t);
+    static_assert(type_dependant_false<T>::value, "Currently lightuserdata is not supported. See issue 140.");
     MetatableRegistry::SetMetatable(l, typeid(T));
 }
 
